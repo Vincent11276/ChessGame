@@ -8,10 +8,14 @@ using namespace std;
 
 class ChessServer : public Server
 {
+public:
+    std::string name;
+    uint32_t maxClients;
+
 private:
     virtual void onServerReady() override
     {
-        std::cout << "Server has started with port " << port << std::endl;
+        std::cout << "Server has started on port" << port << std::endl;
     }
 
     virtual void onServerShutdown() override

@@ -10,6 +10,7 @@ class Server
 {
 public:
     unsigned short port;
+    bool encryptData;
     bool isRunning;
     bool isOpen;
 
@@ -23,8 +24,15 @@ private:
 public:
     Server(unsigned short port=PORT, bool isOpen=VISIBILITY)
     {
+
         this->port = port;
         this->isOpen = isOpen;
+    }
+
+    ~Server()
+    {
+        // send disconnect signal during destruction
+        disconnectAllClients();
     }
 
     void run()
@@ -33,10 +41,10 @@ public:
         this->isRunning = true;
 
         std::thread connThread(&Server::connectClients, this);
-        //std::thread mngePcksThread(&Server::managePackets, this);
+        std::thread mngePcksThread(&Server::managePackets, this);
 
         connThread.join();
-        //mngePcksThread.join();
+        mngePcksThread.join();
     }
 
     void shuttdown()
@@ -56,6 +64,16 @@ public:
     {
         this->onClientDisconnect(*client.get());
         this->selector.remove(*client.get());
+
+        // TO-DO -> remove client object from vector
+    }
+
+    void disconnectAllClients()
+    {
+        for (auto &client: clients)
+        {
+            client->disconnect();
+        }
     }
 
 private:
@@ -63,13 +81,15 @@ private:
     {
         
     }
+    
     void connectClients()
     {
-        if (this->listener.listen(this->port) != sf::Socket::Done) return;
+        std::cout << "Searching for clients" << std::endl;
+        if (this->listener.listen(this->
+        port) != sf::Socket::Done) return;
 
         while (this->isOpen)
         {
-            std::cout << "searchia" << std::endl;
             auto newClient = std::make_unique<sf::TcpSocket>();
 
             if (listener.accept(*newClient) != sf::Socket::Done)
@@ -83,6 +103,8 @@ private:
 
     void managePackets()
     {
+        std::cout << "managing packets" << std::endl;
+
         while (this->isRunning)
         {
             if (selector.wait())
@@ -118,6 +140,7 @@ private:
                 return std::move(client);
             }
         }
+        return std::make_unique<sf::TcpSocket>();
     }
 
 protected:

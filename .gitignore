@@ -2,4 +2,6 @@ Server/build
 Server/.vscode
 Client/build
 Client/.vscode
+ChessUI/build
+ChessUI/.vscode
 
